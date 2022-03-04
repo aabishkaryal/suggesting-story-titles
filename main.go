@@ -1,7 +1,18 @@
 package main
 
-import "fmt"
+import (
+	"log"
+
+	"github.com/joho/godotenv"
+)
 
 func main() {
-	fmt.Println("Hello World!")
+	err := godotenv.Load()
+	handleError(err, "Error loading environment variables")
+}
+
+func handleError(err error, message string) {
+	if err != nil {
+		log.Fatalln(message)
+	}
 }
