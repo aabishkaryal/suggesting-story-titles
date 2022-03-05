@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"encoding/csv"
 	"errors"
 	"fmt"
@@ -13,10 +12,7 @@ import (
 
 	"github.com/aabishkaryal/suggesting-story-titles/utils"
 	"github.com/joho/godotenv"
-	"googlemaps.github.io/maps"
 )
-
-var mapsClient *maps.Client
 
 func main() {
 	if len(os.Args) < 2 {
@@ -31,9 +27,6 @@ func main() {
 	err = godotenv.Load()
 	utils.HandleError(err, "Error loading environment variables")
 
-	mapsClient, err = maps.NewClient(maps.WithAPIKey(os.Getenv("API_KEY")))
-	utils.HandleError(err, "Error initializing the google maps API client")
-
 	for _, rec := range records {
 		fmt.Println(labelRecord(rec))
 	}
@@ -44,7 +37,7 @@ func labelRecord(record []string) string {
 	lat, _ := strconv.ParseFloat(record[1], 32)
 	lng, _ := strconv.ParseFloat(record[2], 32)
 	date := parseDate(record[0])
-	address := reverseGeocode(lat, lng)
+	address := utils.ReverseGeocode(lat, lng)
 	return date.Month().String() + "\t" + address
 }
 
@@ -60,16 +53,4 @@ func parseDate(date string) time.Time {
 	}
 	utils.HandleError(errors.New("unsupported date format"), "Error parsing date "+date)
 	return time.Time{}
-}
-
-func reverseGeocode(lat float64, lng float64) string {
-	request := &maps.GeocodingRequest{LatLng: &maps.LatLng{Lat: lat, Lng: lng},
-		ResultType: []string{"colloquial_area", "sublocality_level_1", "locality", "country"}}
-
-	responses, err := mapsClient.ReverseGeocode(context.Background(), request)
-	utils.HandleError(err, "Error reverse geocoding lat and long")
-	if len(responses) == 0 {
-		return ""
-	}
-	return responses[0].FormattedAddress
 }
