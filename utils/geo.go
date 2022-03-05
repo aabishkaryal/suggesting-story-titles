@@ -2,26 +2,39 @@ package utils
 
 import (
 	"context"
+	"log"
 
+	"github.com/aabishkaryal/suggesting-story-titles/models"
 	"googlemaps.github.io/maps"
 )
 
-var mapsClient *maps.Client
+var mapClient *maps.Client
 
-func Initialize(apiKey string) {
+func InitializeMapClient(apiKey string) {
 	var err error
-	mapsClient, err = maps.NewClient(maps.WithAPIKey(apiKey))
+	mapClient, err = maps.NewClient(maps.WithAPIKey(apiKey))
 	HandleError(err, "Error initializing the google maps API client")
 }
 
-func ReverseGeocode(lat float64, lng float64) string {
+func ReverseGeocode(lat float64, lng float64) models.Address {
 	request := &maps.GeocodingRequest{LatLng: &maps.LatLng{Lat: lat, Lng: lng},
 		ResultType: []string{"colloquial_area", "sublocality_level_1", "locality", "country"}}
 
-	responses, err := mapsClient.ReverseGeocode(context.Background(), request)
+	responses, err := mapClient.ReverseGeocode(context.Background(), request)
 	HandleError(err, "Error reverse geocoding lat and long")
 	if len(responses) == 0 {
-		return ""
+		log.Fatalln("Unable to reverse geocode")
 	}
-	return responses[0].FormattedAddress
+
+	address := models.Address{}
+	for _, addressComponent := range responses[0].AddressComponents {
+		if Contains(addressComponent.Types, "country") {
+			address.Country = addressComponent.LongName
+		} else if Contains(addressComponent.Types, "locality") {
+			address.City = addressComponent.LongName
+		} else if Contains(addressComponent.Types, "sublocality") {
+			address.Locality = addressComponent.LongName
+		}
+	}
+	return address
 }
