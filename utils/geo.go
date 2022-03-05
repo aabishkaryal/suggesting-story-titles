@@ -2,7 +2,6 @@ package utils
 
 import (
 	"context"
-	"log"
 
 	"github.com/aabishkaryal/suggesting-story-titles/models"
 	"googlemaps.github.io/maps"
@@ -23,7 +22,7 @@ func ReverseGeocode(lat float64, lng float64) models.Address {
 	responses, err := mapClient.ReverseGeocode(context.Background(), request)
 	HandleError(err, "Error reverse geocoding lat and long")
 	if len(responses) == 0 {
-		log.Fatalln("Unable to reverse geocode")
+		return models.Address{}
 	}
 
 	address := models.Address{}
