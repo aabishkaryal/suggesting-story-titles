@@ -4,6 +4,6 @@ import "log"
 
 func HandleError(err error, message string) {
 	if err != nil {
-		log.Fatalln(err, message)
+		log.Fatalf("%s \t %v", message, err)
 	}
 }
